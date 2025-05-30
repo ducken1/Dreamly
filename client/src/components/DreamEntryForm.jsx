@@ -57,7 +57,7 @@ function DreamEntryForm({
       />
 
       <textarea
-        placeholder="Pomembni dogodki danes"
+        placeholder="Pomembni dogodki včerajšnjega dne"
         value={events}
         onChange={(e) => setEvents(e.target.value)}
         className={`p-3 rounded border bg-white text-black placeholder:text-black ${
