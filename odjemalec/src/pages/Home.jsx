@@ -1,4 +1,4 @@
-// Modify your Home.jsx to add login form + button to register page
+// src/pages/Home.jsx
 
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
@@ -10,20 +10,26 @@ import { auth } from '../firebase';
 function Home({ setUser }) {
   const navigate = useNavigate();
 
-  // State for email login
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleLoginSuccess = (credentialResponse) => {
     const decoded = jwtDecode(credentialResponse.credential);
     setUser(decoded);
-    navigate('/dashboard');
+    setSuccess('Prijava uspešna z Google računom!');
+    setTimeout(() => {
+      setSuccess('');
+      navigate('/dashboard');
+    }, 1500);
   };
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -32,9 +38,21 @@ function Home({ setUser }) {
         email: user.email,
         uid: user.uid,
       });
-      navigate('/dashboard');
+      setSuccess('Prijava uspešna!');
+      setTimeout(() => {
+        setSuccess('');
+        navigate('/dashboard');
+      }, 1500);
     } catch (err) {
-      setError('Napaka pri prijavi: ' + err.message);
+      console.error(err);
+      switch (err.code) {
+        case 'auth/invalid-credential':
+          setError('Napačni podatki za prijavo.');
+          break;
+        case 'auth/too-many-requests':
+          setError('Preveč neuspešnih poskusov. Poskusi kasneje.');
+          break;
+      }
     }
   };
 
@@ -50,33 +68,46 @@ function Home({ setUser }) {
         Prijavi se z Google računom ali preko emaila.
       </p>
 
+      {/* Obvestila */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded w-72">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded w-72">
+          {success}
+        </div>
+      )}
+
       {/* Email/password login form */}
-    <form onSubmit={handleEmailLogin} className="flex flex-col gap-4 w-72">
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        className="p-2 border rounded bg-white text-gray-900"
-      />
-      <input
-        type="password"
-        placeholder="Geslo"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        className="p-2 border rounded bg-white text-gray-900"
-      />
-      {error && <p className="text-red-500">{error}</p>}
-      <button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded shadow">
-        Prijava
-      </button>
-    </form>
+      <form onSubmit={handleEmailLogin} className="flex flex-col gap-4 w-72">
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="p-2 border rounded bg-white text-gray-900"
+        />
+        <input
+          type="password"
+          placeholder="Geslo"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="p-2 border rounded bg-white text-gray-900"
+        />
+        <button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded shadow">
+          Prijava
+        </button>
+      </form>
 
-
-            {/* Google Login */}
-      <GoogleLogin onSuccess={handleLoginSuccess} onError={() => console.log('Login Failed')} />
+      {/* Google Login */}
+      <GoogleLogin
+        onSuccess={handleLoginSuccess}
+        onError={() => setError('Google prijava ni uspela.')}
+      />
 
       {/* Link to Register */}
       <p className="text-purple-800">
