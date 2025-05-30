@@ -44,7 +44,7 @@ function Register() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 to-purple-300 flex flex-col items-center justify-start pt-12 text-center px-4 gap-4">
 
-      <img src="/logo.png" alt="Dreamly Logo" className="w-32 h-32 mb-7" />
+      <img src="/logo.png" alt="Dreamly Logo" className="w-32 h-32" />
 
       <h1 className="text-5xl font-extrabold text-purple-700 drop-shadow-md">
         Registracija

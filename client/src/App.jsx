@@ -7,22 +7,24 @@ import Register from './pages/Register';
 
 function App() {
   const [user, setUser] = useState(() => {
-    // Try to get the user from localStorage on initial render
     const storedUser = localStorage.getItem('user');
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
+  const [darkMode, setDarkMode] = useState(() => {
+    const stored = localStorage.getItem('darkMode');
+    return stored ? JSON.parse(stored) : false;
+  });
+
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem('user');  // Clear storage on logout
+    localStorage.removeItem('user');
   };
 
-  // Whenever user changes, save to localStorage
+  // Persist dark mode to localStorage
   useEffect(() => {
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-    }
-  }, [user]);
+    localStorage.setItem('darkMode', JSON.stringify(darkMode));
+  }, [darkMode]);
 
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
@@ -30,11 +32,22 @@ function App() {
         <Routes>
           <Route path="/" element={<Home setUser={setUser} />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/" />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              user ? (
+                <Dashboard 
+                  user={user} 
+                  onLogout={handleLogout} 
+                  darkMode={darkMode} 
+                  setDarkMode={setDarkMode} 
+                />
+              ) : <Navigate to="/" />
+            } 
+          />
         </Routes>
       </Router>
     </GoogleOAuthProvider>
   );
 }
-
 export default App;

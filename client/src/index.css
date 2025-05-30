@@ -72,3 +72,30 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0e7ff; /* svetlejša vijolična, lahko prilagodiš */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #7c3aed; /* temnejša vijolična */
+  border-radius: 10px;
+  border: 2px solid #f0e7ff; /* da da malo prostora okoli */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #5b21b6; /* še temnejša vijolična ob hoverju */
+}
+
+/* Za Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #7c3aed #f0e7ff;
+}

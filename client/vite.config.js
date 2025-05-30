@@ -7,22 +7,26 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       manifest: {
-        name: 'Dream Journal',
-        short_name: 'DreamJournal',
+        name: 'Dreamly',
+        short_name: 'Dreamly',
         description: 'Aplikacija za beleženje sanj in analiziranje vzorcev',
-        theme_color: '#2563eb',  // modra iz Tailwind barv
+        theme_color: '#C084FC',
+        background_color: '#E9D5FF',
         icons: [
           {
-            src: 'logo.png', // ikone pripravi v /public
+            src: 'logo.png',
             sizes: '500x500',
             type: 'image/png',
+          },
+          {
+            src: 'logo-512.png',
+            sizes: '512x512',
+            type: 'image/png',
           }
-        ]
+        ],
       },
-      workbox: {
-        // konfiguriraj cache, če želiš (lahko za začetek pustiš privzeto)
-      }
-    })
+    }),
   ],
 })

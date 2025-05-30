@@ -1,11 +1,11 @@
 // src/pages/Home.jsx
 
 import { GoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from 'jwt-decode';
 import { useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
+
+import { auth, provider, signInWithPopup } from '../firebase';
 
 function Home({ setUser }) {
   const navigate = useNavigate();
@@ -15,46 +15,84 @@ function Home({ setUser }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const handleLoginSuccess = (credentialResponse) => {
-    const decoded = jwtDecode(credentialResponse.credential);
-    setUser(decoded);
-    setSuccess('Prijava uspešna z Google računom!');
+const handleEmailLogin = async (e) => {
+  e.preventDefault();
+  setError('');
+  setSuccess('');
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    setUser({
+      name: user.displayName,
+      email: user.email,
+      uid: user.uid,
+    });
+
+    // Shranimo v localStorage
+    localStorage.setItem(
+      'user',
+      JSON.stringify({
+        name: user.displayName,
+        email: user.email,
+        uid: user.uid,
+      })
+    );
+
+    setSuccess('Prijava uspešna!');
     setTimeout(() => {
       setSuccess('');
       navigate('/dashboard');
     }, 1500);
-  };
+  } catch (err) {
+    console.error(err);
+    switch (err.code) {
+      case 'auth/invalid-credential':
+        setError('Napačni podatki za prijavo.');
+        break;
+      case 'auth/too-many-requests':
+        setError('Preveč neuspešnih poskusov. Poskusi kasneje.');
+        break;
+      default:
+        setError('Prišlo je do napake pri prijavi.');
+    }
+  }
+};
 
-  const handleEmailLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
+const handleGoogleLogin = async () => {
+  setError('');
+  setSuccess('');
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    setUser({
+      name: user.displayName,
+      email: user.email,
+      uid: user.uid,
+      photoURL: user.photoURL,
+    });
 
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      setUser({
+    // Shranimo v localStorage
+    localStorage.setItem(
+      'user',
+      JSON.stringify({
         name: user.displayName,
         email: user.email,
         uid: user.uid,
-      });
-      setSuccess('Prijava uspešna!');
-      setTimeout(() => {
-        setSuccess('');
-        navigate('/dashboard');
-      }, 1500);
-    } catch (err) {
-      console.error(err);
-      switch (err.code) {
-        case 'auth/invalid-credential':
-          setError('Napačni podatki za prijavo.');
-          break;
-        case 'auth/too-many-requests':
-          setError('Preveč neuspešnih poskusov. Poskusi kasneje.');
-          break;
-      }
-    }
-  };
+        photoURL: user.photoURL,
+      })
+    );
+
+    setSuccess('Prijava z Google računom uspešna!');
+    setTimeout(() => {
+      setSuccess('');
+      navigate('/dashboard');
+    }, 1500);
+  } catch (err) {
+    console.error(err);
+    setError('Google prijava ni uspela.');
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 to-purple-300 flex flex-col items-center justify-start pt-12 text-center px-4 gap-4">
@@ -62,7 +100,7 @@ function Home({ setUser }) {
       <img src="/logo.png" alt="Dreamly Logo" className="w-32 h-32" />
 
       <h1 className="text-5xl font-extrabold text-purple-700 drop-shadow-md">
-        Dobrodošla v Dreamly
+        Dobrodošli v Dreamly
       </h1>
       <p className="text-lg text-purple-800 max-w-md">
         Prijavi se z Google računom ali preko emaila.
@@ -103,11 +141,14 @@ function Home({ setUser }) {
         </button>
       </form>
 
-      {/* Google Login */}
-      <GoogleLogin
-        onSuccess={handleLoginSuccess}
-        onError={() => setError('Google prijava ni uspela.')}
-      />
+{/* Google Login */}
+<button
+  onClick={handleGoogleLogin}
+  className="flex items-center justify-center gap-3 px-4 py-2 rounded border border-gray-300 bg-white hover:bg-gray-100 shadow-sm transition-colors duration-200 text-gray-900"
+>
+  <img src="/google-logo.svg" alt="Google logo" className="w-6 h-6" />
+  Prijava z Google
+</button>
 
       {/* Link to Register */}
       <p className="text-purple-800">
