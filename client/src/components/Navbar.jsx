@@ -5,7 +5,7 @@ function Navbar({ user, onLogout, darkMode, setDarkMode }) {
       ${darkMode ? 'bg-gray-900 text-white' : 'bg-purple-50 text-purple-800'}`}
     >
       <div className="flex items-center gap-3">
-        <img src="/logo.png" alt="Dreamly Logo" className="w-16 h-16" />
+        <img src="/logo-192x192.png" alt="Dreamly Logo" className="w-16 h-16" />
         <h1 className="text-2xl font-bold tracking-tight"> Dreamly</h1>
       </div>
 
