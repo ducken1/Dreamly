@@ -79,7 +79,7 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
           <h2 className="text-3xl font-bold mb-4">
             Nadzorna plošča
           </h2>
-          <p className={darkMode ? 'mb-6 text-gray-300' : 'mb-6 text-purple-800'}>
+          <p className={darkMode ? 'mb-2 text-gray-300' : 'mb-2 text-purple-800'}>
             Dobrodošli nazaj, <span className="font-semibold">{user?.name || 'uporabnik'}</span>! Tukaj lahko zabeležiš svoje sanje in občutke.
           </p>
 
