@@ -7,6 +7,8 @@ import EntriesList from '../components/EntriesList';
 import AlertMessage from '../components/AlertMessage';
 import { useDreamEntries } from '../hooks/useDreamEntries';
 import MoodChart from '../components/MoodChart';
+import TopMoodPerDayChart from '../components/TopMoodPerDayChart';
+
 
 function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
   const [success, setSuccess] = useState('');
@@ -179,9 +181,14 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
         />
       </div>
 
-      <div className="flex justify-center px-4">
-        <MoodChart entries={entries} darkMode={darkMode} />
-      </div>
+<div className="flex justify-center items-start px-4">
+  <MoodChart entries={entries} darkMode={darkMode} />
+  <TopMoodPerDayChart entries={entries} darkMode={darkMode} />
+</div>
+
+
+
+      
 
       <footer className="mt-8">
         <p className="text-sm text-center text-gray-500">

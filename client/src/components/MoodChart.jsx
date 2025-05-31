@@ -1,9 +1,8 @@
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#8dd1e1', '#a4de6c'];
 
 function MoodChart({ entries, darkMode }) {
-  // Agregiraj pogostost emoji-jev iz vnosa
   const emojiCount = entries.reduce((acc, entry) => {
     const emoji = entry.emoji || '❓';
     acc[emoji] = (acc[emoji] || 0) + 1;
@@ -16,10 +15,12 @@ function MoodChart({ entries, darkMode }) {
     return <p className={darkMode ? 'text-gray-300' : 'text-purple-800'}>Ni podatkov za prikaz grafa.</p>;
   }
 
-
   return (
-    <div className="max-w-md">
-      <h3 className={darkMode ? 'text-xl text-gray-300' : 'text-xl text-purple-900'}>
+    <div className="max-w-md w-full">
+      <h3
+        className={darkMode ? 'text-xl text-gray-300' : 'text-xl text-purple-900'}
+        style={{ minHeight: 38 }} // poravnava višine naslovov
+      >
         Pogostost občutkov ob prebujanju
       </h3>
       <ResponsiveContainer width="100%" height={280}>
@@ -30,14 +31,13 @@ function MoodChart({ entries, darkMode }) {
             cx="50%"
             cy="50%"
             outerRadius={100}
-            label={({ name }) => name} 
+            label={({ name }) => name}
           >
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
           <Tooltip />
-{/*           <Legend content={renderLegend} /> */}
         </PieChart>
       </ResponsiveContainer>
     </div>
