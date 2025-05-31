@@ -155,7 +155,7 @@ function DreamEntryForm({
           className={`p-3 rounded border w-full text-black placeholder:text-black ${
             darkMode ? 'bg-gray-700 text-gray-100 placeholder:text-gray-400' : 'bg-white'
           }`}
-          rows={4}
+          rows={3}
           required
         />
         {/* Namesto top-2 zdaj bottom-2 → gumb bo v spodnjem desnem kotu */}

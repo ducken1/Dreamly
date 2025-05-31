@@ -1,5 +1,17 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
-import { format } from 'date-fns';
+import { format, getDay } from 'date-fns';
+
+const dniVTednu = ['Ned', 'Pon', 'Tor', 'Sre', 'Čet', 'Pet', 'Sob'];
+
+const vrstniRedDni = {
+  Pon: 0,
+  Tor: 1,
+  Sre: 2,
+  Čet: 3,
+  Pet: 4,
+  Sob: 5,
+  Ned: 6,
+};
 
 function TopMoodPerDayChart({ entries, darkMode }) {
   const groupedByDate = entries.reduce((acc, entry) => {
@@ -34,7 +46,8 @@ function TopMoodPerDayChart({ entries, darkMode }) {
     return acc;
   }, {});
 
-  const data = Object.entries(groupedByDate).map(([date, emojis]) => {
+  // Za vsak datum najdi top emoji in count
+  const dataPerDate = Object.entries(groupedByDate).map(([date, emojis]) => {
     let topEmoji = '❓';
     let maxCount = 0;
 
@@ -45,28 +58,56 @@ function TopMoodPerDayChart({ entries, darkMode }) {
       }
     }
 
+    const parsedDate = new Date(date);
+    const dayIndex = getDay(parsedDate);
+    const day = dniVTednu[dayIndex];
+
     return {
       date,
+      day,
       count: maxCount,
       emoji: topEmoji,
     };
   });
+
+  // Agregacija: združimo podatke po dnevu, da na dan pripišemo največji count in pripadajoči emoji
+  // Lahko izbereš tudi vsoto countov, ampak tukaj vzamemo največji count in emoji tega vnosa
+
+  const aggregatedByDay = dataPerDate.reduce((acc, curr) => {
+    const day = curr.day;
+
+    if (!acc[day]) {
+      acc[day] = { day, count: curr.count, emoji: curr.emoji };
+    } else {
+      if (curr.count > acc[day].count) {
+        acc[day] = { day, count: curr.count, emoji: curr.emoji };
+      }
+    }
+
+    return acc;
+  }, {});
+
+  // Pretvorba nazaj v array
+  let data = Object.values(aggregatedByDay);
+
+  // Sortiramo po tvojem vrstnem redu dni
+  data.sort((a, b) => vrstniRedDni[a.day] - vrstniRedDni[b.day]);
 
   if (data.length === 0) {
     return <p className={darkMode ? 'text-gray-300' : 'text-purple-800'}>Ni dovolj podatkov za prikaz grafikona.</p>;
   }
 
   return (
-    <div className="max-w-md w-full ml-8"> {/* ml-8 za razmak od prvega */}
+    <div className="max-w-md w-full ml-8">
       <h3
         className={darkMode ? 'text-xl text-gray-300' : 'text-xl text-purple-900'}
-        style={{ minHeight: 38 }} // enaka višina naslova
+        style={{ minHeight: 38 }}
       >
         Najpogostejši občutek po dnevih
       </h3>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data}>
-          <XAxis dataKey="date" stroke={darkMode ? '#ccc' : '#333'} />
+          <XAxis dataKey="day" stroke={darkMode ? '#ccc' : '#333'} />
           <YAxis stroke={darkMode ? '#ccc' : '#333'} allowDecimals={false} />
           <Tooltip />
           <Bar dataKey="count" fill="#8884d8">
