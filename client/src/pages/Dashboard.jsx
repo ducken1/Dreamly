@@ -1,3 +1,5 @@
+// src/pages/Dashboard.jsx
+
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import DreamEntryForm from '../components/DreamEntryForm';
@@ -7,15 +9,18 @@ import { useDreamEntries } from '../hooks/useDreamEntries';
 import MoodChart from '../components/MoodChart';
 
 function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
-  // success / error alerts
   const [success, setSuccess] = useState('');
   const [error, setError]     = useState('');
-  // which entry we’re editing
+
+  // Če urejamo, vsebuje objekt; če ne, je null → prazen obrazec
   const [editingEntry, setEditingEntry] = useState(null);
-  // track online/offline
+
+  // Poseben ključ, da vsakič remonta DreamEntryForm (= prazni fieldi)
+  const [formKey, setFormKey] = useState(0);
+
+  // Spremljamo online/offline, da prikažemo ustrezno obvestilo
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
-  // listen for network changes
   useEffect(() => {
     const goOffline = () => setIsOffline(true);
     const goOnline  = () => setIsOffline(false);
@@ -27,7 +32,6 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
     };
   }, []);
 
-  // your data + background-sync hooks
   const {
     entries,
     loading,
@@ -37,75 +41,75 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
     deleteEntry
   } = useDreamEntries(user);
 
-  const handleSubmit = async (entryData) => {
-    // clear old messages
+  const handleSubmit = (entryData) => {
+    // 1) Počistimo vsa sporočila
     setError('');
     setSuccess('');
 
-    if (!entryData.dream.trim()) {
-      setError('Polje za sanje je obvezno.');
-      return;
-    }
+    // 2) Takoj “odpovemo” editingEntry in remontaš formo
+    //    (reakcija: key se spremeni => unmount + mount → DreamEntryForm je prazen)
+    const wasEditing = Boolean(editingEntry);
+    const entryId    = editingEntry?.id;
+    setEditingEntry(null);
+    setFormKey(prev => prev + 1);
 
-    // OFFLINE: show same AlertMessage style, then queue the entry
-    if (isOffline) {
-      setSuccess(
-        'Trenutno si offline. Vnos bo shranjen lokalno in sinhroniziran ob ponovni povezavi.'
-      );
-      setTimeout(() => setSuccess(''), 3000);
-
-      try {
-        await addEntry(entryData); // background‐sync queue
-      } catch (bgErr) {
-        console.warn('Napaka pri enqueue Background Sync:', bgErr);
-      }
-
-      setEditingEntry(null);
-      return;
-    }
-
-    // ONLINE: normal save/update flow
-    try {
-      if (editingEntry) {
-        await updateEntry(editingEntry.id, entryData);
-        setSuccess('Vnos uspešno posodobljen!');
-      } else {
-        await addEntry(entryData);
-        setSuccess('Vnos uspešno shranjen!');
-      }
-      setEditingEntry(null);
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      console.error('Napaka pri shranjevanju:', err);
-      setError(err.message || 'Prišlo je do napake pri shranjevanju.');
+    // 3) Počnemo dejanski add/update asinkrono (ne čakamo, da se obrazec spremeni)
+    if (wasEditing) {
+      // urejamo obstoječ vnos
+      updateEntry(entryId, entryData)
+        .then(() => {
+          setSuccess('Vnos uspešno posodobljen!');
+          setTimeout(() => setSuccess(''), 3000);
+        })
+        .catch((err) => {
+          console.error('Napaka pri posodobitvi:', err);
+          setError(err.message || 'Prišlo je do napake pri posodobitvi.');
+        });
+    } else {
+      // ustvarjamo nov vnos (če smo offline, addEntry bo enqueue-ano)
+      addEntry(entryData)
+        .then(() => {
+          setSuccess('Vnos uspešno shranjen!');
+          setTimeout(() => setSuccess(''), 3000);
+        })
+        .catch((err) => {
+          console.error('Napaka pri shranjevanju:', err);
+          setError(err.message || 'Prišlo je do napake pri shranjevanju.');
+        });
     }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      const deleted = await deleteEntry(id);
-      if (deleted) {
-        if (editingEntry?.id === id) {
-          setEditingEntry(null);
-          setError('');
+  const handleDelete = (id) => {
+    deleteEntry(id)
+      .then((deleted) => {
+        if (deleted) {
+          // če brišemo tisti, ki ga urejamo, odpovemo urejanje in remontaš
+          if (editingEntry?.id === id) {
+            setEditingEntry(null);
+            setFormKey(prev => prev + 1);
+          }
+          setSuccess('Vnos je bil izbrisan.');
+          setTimeout(() => setSuccess(''), 3000);
         }
-        setSuccess('Vnos je bil izbrisan.');
-        setTimeout(() => setSuccess(''), 3000);
-      }
-    } catch (err) {
-      console.error('Napaka pri brisanju:', err);
-      setError(err.message || 'Prišlo je do napake pri brisanju vnosa.');
-    }
+      })
+      .catch((err) => {
+        console.error('Napaka pri brisanju:', err);
+        setError(err.message || 'Prišlo je do napake pri brisanju vnosa.');
+      });
   };
 
   const handleEdit = (entry) => {
+    // Preklopimo v “urejanje” za ta vnos
     setEditingEntry(entry);
     setError('');
     setSuccess('');
+    // NE spreminjamo formKey, ker želimo obstoječe vrednosti v obrazcu
   };
 
   const handleCancelEdit = () => {
+    // Prekličemo urejanje → remontaš formo, da je prazna
     setEditingEntry(null);
+    setFormKey(prev => prev + 1);
     setError('');
     setSuccess('');
   };
@@ -126,16 +130,16 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
       />
 
       <div className="p-8 max-w-7xl mx-auto flex justify-between gap-8 min-h-[80vh]">
-        {/* Left form container */}
+        {/* Levi stolpec: obrazec + obvestila */}
         <div className="max-w-xl">
           <h2 className="text-3xl font-bold mb-4">Nadzorna plošča</h2>
           <p className={darkMode ? 'mb-2 text-gray-300' : 'mb-2 text-purple-800'}>
-            Dobrodošli nazaj,{' '}
+            Dobrodošli nazaj,&nbsp;
             <span className="font-semibold">{user?.name || 'uporabnik'}</span>! Tukaj
             lahko zabeležiš svoje sanje in občutke.
           </p>
 
-          {/* OFFLINE banner inlined here with same AlertMessage styling */}
+          {/* Offline banner */}
           {isOffline && (
             <AlertMessage
               message="Trenutno si offline. Vnos bo shranjen lokalno in sinhroniziran ob ponovni povezavi."
@@ -144,11 +148,19 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
             />
           )}
 
-          {/* Success & error alerts */}
+          {/* Uspeh / napaka */}
           <AlertMessage message={success} type="success" darkMode={darkMode} />
           <AlertMessage message={error}   type="error"   darkMode={darkMode} />
 
+          {/*
+            DreamEntryForm z dinamičnim key:
+            - Če urejamo (editingEntry ≠ null), key = editingEntry.id
+            - Če ne (editingEntry === null), key = new-${formKey}
+            Vsakič, ko kličeš setEditingEntry(null) in setFormKey(...), 
+            se DreamEntryForm unmounta in remonta s praznim state-om.
+          */}
           <DreamEntryForm
+            key={editingEntry ? editingEntry.id : `new-${formKey}`}
             editingEntry={editingEntry}
             onSubmit={handleSubmit}
             onCancel={handleCancelEdit}
@@ -156,7 +168,7 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
           />
         </div>
 
-        {/* Right sidebar */}
+        {/* Desni stolpec: seznam prejšnjih vnosov */}
         <EntriesList
           entries={entries}
           loading={loading}

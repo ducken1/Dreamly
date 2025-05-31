@@ -1,20 +1,29 @@
+// src/components/DreamEntryForm.jsx
+
 import { useState, useEffect } from 'react';
 
-function DreamEntryForm({ 
-  editingEntry, 
-  onSubmit, 
-  onCancel, 
-  darkMode 
+function DreamEntryForm({
+  editingEntry,
+  onSubmit,
+  onCancel,
+  darkMode
 }) {
+  // Ob montaži (in ob vsaki spremembi editingEntry) nastavimo state:
   const [dream, setDream] = useState(editingEntry?.dream || '');
   const [events, setEvents] = useState(editingEntry?.events || '');
   const [selectedEmoji, setSelectedEmoji] = useState(editingEntry?.emoji || '');
 
-  // sinhronizacija, ko se spreminja editingEntry
   useEffect(() => {
-    setDream(editingEntry?.dream || '');
-    setEvents(editingEntry?.events || '');
-    setSelectedEmoji(editingEntry?.emoji || '');
+    if (editingEntry) {
+      setDream(editingEntry.dream || '');
+      setEvents(editingEntry.events || '');
+      setSelectedEmoji(editingEntry.emoji || '');
+    } else {
+      // Če editingEntry === null, to pomeni nov vnos → pobriši
+      setDream('');
+      setEvents('');
+      setSelectedEmoji('');
+    }
   }, [editingEntry]);
 
   const handleSubmit = async (e) => {
@@ -25,18 +34,26 @@ function DreamEntryForm({
     }
 
     const entryData = { dream, emoji: selectedEmoji, events };
-    await onSubmit(entryData);
 
-    // počisti formo
+    // PO KLIKU TAKOJ POBRIŠEMO LOKALNI STATE
     setDream('');
     setEvents('');
     setSelectedEmoji('');
+
+    // Nato pokličemo parentov onSubmit (če je offline, bo enqueue-ano; 
+    // če je online, bo takoj shranjeno).
+    await onSubmit(entryData);
+
+    // Ker parent v Dashboard-u takoj kliče setEditingEntry(null) in setFormKey(...),
+    // bo DreamEntryForm remonta in ostane prazna.
   };
 
   const handleCancel = () => {
+    // Lokalno popravimo takoj
     setDream('');
     setEvents('');
     setSelectedEmoji('');
+    // Sporočimo parentu
     onCancel();
   };
 
@@ -61,7 +78,7 @@ function DreamEntryForm({
         }`}
       />
 
-      {/* Emoji picker */}
+      {/* Emoji izbira */}
       <div
         className={`mt-2 p-4 rounded-xl border ${
           darkMode
