@@ -164,7 +164,7 @@ function DreamEntryForm({
           onClick={() => toggleListening('dream')}
           title={activeField === 'dream' ? 'Ustavi snemanje' : 'Začni snemanje'}
           className={`
-            absolute bottom-2 right-2
+            absolute bottom-3 right-1
             p-2 rounded-full
             focus:outline-none
             transition
@@ -173,7 +173,7 @@ function DreamEntryForm({
                 ? 'bg-red-500 text-white animate-pulse'
                 : darkMode
                 ? 'bg-gray-600 text-gray-100 hover:bg-gray-500'
-                : 'bg-purple-200 text-purple-800 hover:bg-purple-300'
+                : 'bg-purple-700 text-purple-800 hover:bg-purple-300'
             }
           `}
         >
@@ -202,7 +202,7 @@ function DreamEntryForm({
           onClick={() => toggleListening('events')}
           title={activeField === 'events' ? 'Ustavi snemanje' : 'Začni snemanje'}
           className={`
-            absolute bottom-2 right-2
+            absolute bottom-3 right-1
             p-2 rounded-full
             focus:outline-none
             transition
@@ -211,7 +211,7 @@ function DreamEntryForm({
                 ? 'bg-red-500 text-white animate-pulse'
                 : darkMode
                 ? 'bg-gray-600 text-gray-100 hover:bg-gray-500'
-                : 'bg-purple-200 text-purple-800 hover:bg-purple-300'
+                : 'bg-purple-700 text-purple-800 hover:bg-purple-300'
             }
           `}
         >
