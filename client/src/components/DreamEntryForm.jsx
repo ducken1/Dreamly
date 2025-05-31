@@ -10,6 +10,13 @@ function DreamEntryForm({
   const [events, setEvents] = useState(editingEntry?.events || '');
   const [selectedEmoji, setSelectedEmoji] = useState(editingEntry?.emoji || '');
 
+  // sinhronizacija, ko se spreminja editingEntry
+  useEffect(() => {
+    setDream(editingEntry?.dream || '');
+    setEvents(editingEntry?.events || '');
+    setSelectedEmoji(editingEntry?.emoji || '');
+  }, [editingEntry]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -17,15 +24,10 @@ function DreamEntryForm({
       throw new Error('Polje za sanje je obvezno.');
     }
 
-    const entryData = {
-      dream,
-      emoji: selectedEmoji,
-      events
-    };
-
+    const entryData = { dream, emoji: selectedEmoji, events };
     await onSubmit(entryData);
-    
-    // Reset form after successful submission
+
+    // počisti formo
     setDream('');
     setEvents('');
     setSelectedEmoji('');
@@ -37,12 +39,6 @@ function DreamEntryForm({
     setSelectedEmoji('');
     onCancel();
   };
-
-    useEffect(() => {
-    setDream(editingEntry?.dream || '');
-    setEvents(editingEntry?.events || '');
-    setSelectedEmoji(editingEntry?.emoji || '');
-  }, [editingEntry]);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -65,10 +61,12 @@ function DreamEntryForm({
         }`}
       />
 
-      {/* Emoji izbor za počutje */}
+      {/* Emoji picker */}
       <div
         className={`mt-2 p-4 rounded-xl border ${
-          darkMode ? 'bg-gray-800 border-gray-600 text-gray-300' : 'bg-purple-100 border-transparent text-purple-800'
+          darkMode
+            ? 'bg-gray-800 border-gray-600 text-gray-300'
+            : 'bg-purple-100 border-transparent text-purple-800'
         }`}
       >
         <p className="w-full font-semibold mb-2 text-sm">
@@ -99,7 +97,9 @@ function DreamEntryForm({
       <button
         type="submit"
         className={`py-2 mt-2 rounded text-white ${
-          darkMode ? 'bg-purple-700 hover:bg-purple-800' : 'bg-purple-600 hover:bg-purple-700'
+          darkMode
+            ? 'bg-purple-700 hover:bg-purple-800'
+            : 'bg-purple-600 hover:bg-purple-700'
         }`}
       >
         {editingEntry ? 'Uredi vnos' : 'Shrani vnos'}

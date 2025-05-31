@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import DreamEntryForm from '../components/DreamEntryForm';
 import EntriesList from '../components/EntriesList';
@@ -7,14 +7,64 @@ import { useDreamEntries } from '../hooks/useDreamEntries';
 import MoodChart from '../components/MoodChart';
 
 function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
+  // success / error alerts
   const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError]     = useState('');
+  // which entry we’re editing
   const [editingEntry, setEditingEntry] = useState(null);
+  // track online/offline
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
-  const { entries, loading, fetchError, addEntry, updateEntry, deleteEntry } = useDreamEntries(user);
+  // listen for network changes
+  useEffect(() => {
+    const goOffline = () => setIsOffline(true);
+    const goOnline  = () => setIsOffline(false);
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online',  goOnline);
+    return () => {
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('online',  goOnline);
+    };
+  }, []);
 
-  // Submit handler - dodaj ali uredi
+  // your data + background-sync hooks
+  const {
+    entries,
+    loading,
+    fetchError,
+    addEntry,
+    updateEntry,
+    deleteEntry
+  } = useDreamEntries(user);
+
   const handleSubmit = async (entryData) => {
+    // clear old messages
+    setError('');
+    setSuccess('');
+
+    if (!entryData.dream.trim()) {
+      setError('Polje za sanje je obvezno.');
+      return;
+    }
+
+    // OFFLINE: show same AlertMessage style, then queue the entry
+    if (isOffline) {
+      setSuccess(
+        'Trenutno si offline. Vnos bo shranjen lokalno in sinhroniziran ob ponovni povezavi.'
+      );
+      setTimeout(() => setSuccess(''), 3000);
+
+      try {
+        await addEntry(entryData); // background‐sync queue
+      } catch (bgErr) {
+        console.warn('Napaka pri enqueue Background Sync:', bgErr);
+      }
+
+      setEditingEntry(null);
+      return;
+    }
+
+    // ONLINE: normal save/update flow
     try {
       if (editingEntry) {
         await updateEntry(editingEntry.id, entryData);
@@ -23,46 +73,37 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
         await addEntry(entryData);
         setSuccess('Vnos uspešno shranjen!');
       }
-
-      setError('');
       setEditingEntry(null);
       setTimeout(() => setSuccess(''), 3000);
-
     } catch (err) {
-      console.error("Napaka pri shranjevanju: ", err);
+      console.error('Napaka pri shranjevanju:', err);
       setError(err.message || 'Prišlo je do napake pri shranjevanju.');
     }
   };
 
-  // Brisanje vnosa
   const handleDelete = async (id) => {
     try {
       const deleted = await deleteEntry(id);
-      
       if (deleted) {
-        // Če brišemo trenutno urejani vnos, resetiraj formo
-        if (editingEntry && editingEntry.id === id) {
+        if (editingEntry?.id === id) {
           setEditingEntry(null);
           setError('');
         }
-
         setSuccess('Vnos je bil izbrisan.');
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch (err) {
-      console.error("Napaka pri brisanju: ", err);
+      console.error('Napaka pri brisanju:', err);
       setError(err.message || 'Prišlo je do napake pri brisanju vnosa.');
     }
   };
 
-  // Začni urejanje vnosa
   const handleEdit = (entry) => {
     setEditingEntry(entry);
     setError('');
     setSuccess('');
   };
 
-  // Prekliči urejanje
   const handleCancelEdit = () => {
     setEditingEntry(null);
     setError('');
@@ -70,24 +111,44 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
   };
 
   return (
-    <div className={darkMode ? "min-h-screen bg-gray-900 text-gray-100" : "min-h-screen bg-purple-50 text-purple-900"}>
-      <Navbar user={user} onLogout={onLogout} darkMode={darkMode} setDarkMode={setDarkMode} />
+    <div
+      className={
+        darkMode
+          ? 'min-h-screen bg-gray-900 text-gray-100'
+          : 'min-h-screen bg-purple-50 text-purple-900'
+      }
+    >
+      <Navbar
+        user={user}
+        onLogout={onLogout}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+      />
 
       <div className="p-8 max-w-7xl mx-auto flex justify-between gap-8 min-h-[80vh]">
-        {/* Levi form container */}
+        {/* Left form container */}
         <div className="max-w-xl">
-          <h2 className="text-3xl font-bold mb-4">
-            Nadzorna plošča
-          </h2>
+          <h2 className="text-3xl font-bold mb-4">Nadzorna plošča</h2>
           <p className={darkMode ? 'mb-2 text-gray-300' : 'mb-2 text-purple-800'}>
-            Dobrodošli nazaj, <span className="font-semibold">{user?.name || 'uporabnik'}</span>! Tukaj lahko zabeležiš svoje sanje in občutke.
+            Dobrodošli nazaj,{' '}
+            <span className="font-semibold">{user?.name || 'uporabnik'}</span>! Tukaj
+            lahko zabeležiš svoje sanje in občutke.
           </p>
 
-          {/* Success in error sporočila */}
-          <AlertMessage message={success} type="success" darkMode={darkMode} />
-          <AlertMessage message={error} type="error" darkMode={darkMode} />
+          {/* OFFLINE banner inlined here with same AlertMessage styling */}
+          {isOffline && (
+            <AlertMessage
+              message="Trenutno si offline. Vnos bo shranjen lokalno in sinhroniziran ob ponovni povezavi."
+              type="success"
+              darkMode={darkMode}
+            />
+          )}
 
-          <DreamEntryForm 
+          {/* Success & error alerts */}
+          <AlertMessage message={success} type="success" darkMode={darkMode} />
+          <AlertMessage message={error}   type="error"   darkMode={darkMode} />
+
+          <DreamEntryForm
             editingEntry={editingEntry}
             onSubmit={handleSubmit}
             onCancel={handleCancelEdit}
@@ -95,8 +156,8 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
           />
         </div>
 
-        {/* Desni sidebar */}
-        <EntriesList 
+        {/* Right sidebar */}
+        <EntriesList
           entries={entries}
           loading={loading}
           fetchError={fetchError}
@@ -104,16 +165,12 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
           onDelete={handleDelete}
           darkMode={darkMode}
         />
-
-        
       </div>
-
 
       <div className="flex justify-center px-4">
         <MoodChart entries={entries} darkMode={darkMode} />
       </div>
 
-      
       <footer className="mt-8">
         <p className="text-sm text-center text-gray-500">
           &copy; {new Date().getFullYear()} Dreamly. Vse pravice pridržane.

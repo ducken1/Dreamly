@@ -44,7 +44,7 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024},
       workbox: {
         // katere fajle naj precache-a (injekcija v __WB_MANIFEST)
-        globPatterns: ['**/*.{js,css,html,png,svg,ico,json}'],
+        globPatterns: ['**/*.{js,css,html,png,svg,ico,json,jsx}'],
         // dopolni runtime-caching pravila, če želiš
         runtimeCaching: [
           {

@@ -21,6 +21,13 @@ function App() {
     localStorage.removeItem('user');
   };
 
+  useEffect(() => {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}, []);
+
+
   // Persist dark mode to localStorage
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
