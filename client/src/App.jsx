@@ -4,6 +4,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
+import DreamSearchResults from './components/DreamSearchResults';
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -52,6 +53,7 @@ function App() {
               ) : <Navigate to="/" />
             } 
           />
+          <Route path="/search/:emoji" element={<DreamSearchResults />} />
         </Routes>
       </Router>
     </GoogleOAuthProvider>
