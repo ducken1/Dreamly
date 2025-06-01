@@ -53,6 +53,7 @@ export const useDreamEntries = (user) => {
     const entriesRef = collection(db, `users/${user.uid}/entries`);
     await addDoc(entriesRef, {
       ...entryData,
+      favourite: false, // Novi vnosi privzeto niso priljubljeni
       createdAt: Timestamp.now()
     });
 
@@ -72,6 +73,44 @@ export const useDreamEntries = (user) => {
     });
 
     await fetchEntries();
+  };
+
+  // Toggle favourite status
+  const toggleFavourite = async (id) => {
+    if (!user || !user.uid) {
+      throw new Error('Uporabnik ni prijavljen.');
+    }
+
+    try {
+      // Najdi trenutni vnos v lokalnem state-u
+      const currentEntry = entries.find(entry => entry.id === id);
+      if (!currentEntry) {
+        throw new Error('Vnos ni najden.');
+      }
+
+      // Posodobi v Firestore
+      const docRef = doc(db, `users/${user.uid}/entries`, id);
+      const newFavouriteStatus = !currentEntry.favourite;
+      
+      await updateDoc(docRef, {
+        favourite: newFavouriteStatus,
+        updatedAt: Timestamp.now()
+      });
+
+      // Posodobi lokalni state takoj za boljšo uporabniško izkušnjo
+      setEntries(prevEntries => 
+        prevEntries.map(entry => 
+          entry.id === id 
+            ? { ...entry, favourite: newFavouriteStatus }
+            : entry
+        )
+      );
+
+      return newFavouriteStatus;
+    } catch (err) {
+      console.error("Napaka pri posodobitvi priljubljenih: ", err);
+      throw new Error('Prišlo je do napake pri posodobitvi priljubljenih.');
+    }
   };
 
   // Izbriši vnos
@@ -98,6 +137,7 @@ export const useDreamEntries = (user) => {
     fetchError,
     addEntry,
     updateEntry,
-    deleteEntry
+    deleteEntry,
+    toggleFavourite
   };
 };

@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useCallback } from 'react';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import EntryCard from './EntryCard';
 
 function DreamSearchResults() {
@@ -14,7 +14,6 @@ function DreamSearchResults() {
   const auth = getAuth();
   const db = getFirestore();
 
-  // fetchDreams zdaj s useCallback, da jo lahko pokličemo tudi iz onDelete
   const fetchDreams = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -29,9 +28,17 @@ function DreamSearchResults() {
 
     try {
       const entriesRef = collection(db, 'users', user.uid, 'entries');
-      const q = emoji ? query(entriesRef, where('emoji', '==', emoji)) : query(entriesRef);
-      const querySnapshot = await getDocs(q);
+      let q;
 
+      if (emoji === 'favourites') {
+        q = query(entriesRef, where('favourite', '==', true));
+      } else if (emoji) {
+        q = query(entriesRef, where('emoji', '==', emoji));
+      } else {
+        q = query(entriesRef);
+      }
+
+      const querySnapshot = await getDocs(q);
       const dreamsData = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -50,7 +57,6 @@ function DreamSearchResults() {
     fetchDreams();
   }, [fetchDreams]);
 
-  // Funkcija za brisanje vnosa direktno tukaj
   const handleDelete = async (id) => {
     const confirmed = window.confirm('Ali res želite izbrisati ta vnos?');
     if (!confirmed) return;
@@ -67,16 +73,30 @@ function DreamSearchResults() {
       }
       const docRef = doc(db, 'users', user.uid, 'entries', id);
       await deleteDoc(docRef);
-
-      // Osveži seznam sanj po brisanju
       await fetchDreams();
-
     } catch (err) {
       console.error('Napaka pri brisanju vnosa:', err);
       setError('Prišlo je do napake pri brisanju vnosa.');
     }
 
     setLoading(false);
+  };
+
+  const toggleFavourite = async (id, currentValue) => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        setError('Uporabnik ni prijavljen.');
+        return;
+      }
+
+      const docRef = doc(db, 'users', user.uid, 'entries', id);
+      await updateDoc(docRef, { favourite: !currentValue });
+      await fetchDreams();
+    } catch (err) {
+      console.error('Napaka pri posodabljanju favourite:', err);
+      setError('Napaka pri označevanju najljubše sanje.');
+    }
   };
 
   if (loading) {
@@ -101,6 +121,25 @@ function DreamSearchResults() {
     );
   }
 
+  // Poseben primer: emoji === 'favourites' && ni sanj
+  if (emoji === 'favourites' && dreams.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center px-6 py-8 bg-purple-50 dark:bg-gray-900 transition-colors duration-300">
+        <h2 className="text-3xl font-bold text-purple-800 dark:text-white mb-6">
+          Najljubše sanje <span className="text-4xl">💜</span>
+        </h2>
+        <p className="text-lg text-gray-500 dark:text-gray-400 mb-6">Niste še izbrali najljubših sanj.</p>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="px-6 py-3 bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition"
+        >
+          Domov
+        </button>
+      </div>
+    );
+  }
+
+  // Splošni primer: emoji nastavljen in ni rezultatov
   if (emoji && dreams.length === 0) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center px-6 py-8 bg-purple-50 dark:bg-gray-900 transition-colors duration-300">
@@ -122,17 +161,28 @@ function DreamSearchResults() {
     <div className="min-h-screen px-6 py-8 bg-purple-50 dark:bg-gray-900 transition-colors duration-300">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-3xl font-bold text-purple-800 dark:text-white mb-6">
-          Sanje{emoji ? ` z emotikonom:` : ':'} {emoji && <span className="text-4xl">{emoji}</span>}
+          {emoji === 'favourites' ? (
+            <>
+              Najljubše sanje <span className="text-4xl">💜</span>
+            </>
+          ) : emoji ? (
+            <>
+              Sanje z emotikonom: <span className="text-4xl">{emoji}</span>
+            </>
+          ) : (
+            'Vse sanje'
+          )}
         </h2>
 
         <div className="grid gap-4">
           {dreams.map((entry) => (
-            <EntryCard 
-              key={entry.id} 
-              entry={entry} 
-              darkMode={false} 
+            <EntryCard
+              key={entry.id}
+              entry={entry}
+              darkMode={false}
               onEdit={() => navigate('/dashboard', { state: { editId: entry.id } })}
-              onDelete={() => handleDelete(entry.id)} 
+              onDelete={() => handleDelete(entry.id)}
+              onToggleFavourite={() => toggleFavourite(entry.id, entry.favourite)}
             />
           ))}
         </div>

@@ -6,10 +6,13 @@ function EntriesList({
   fetchError, 
   onEdit, 
   onDelete, 
+  onToggleFavourite,
   darkMode 
 }) {
   // Statistika
   const countEntries = entries.length;
+  const countFavourites = entries.filter(entry => entry.favourite).length;
+  
   const avgLength = (field) => {
     if (entries.length === 0) return 0;
     const total = entries.reduce((acc, entry) => acc + (entry[field]?.length || 0), 0);
@@ -38,6 +41,7 @@ function EntriesList({
             entry={entry}
             onEdit={onEdit}
             onDelete={onDelete}
+            onToggleFavourite={onToggleFavourite}
             darkMode={darkMode}
           />
         ))}
@@ -47,6 +51,7 @@ function EntriesList({
       
       <div className="text-sm opacity-70">
         <p>Število vnosov: <strong>{countEntries}</strong></p>
+        <p>Priljubljeni vnosi: <strong>{countFavourites}</strong></p>
         <p>Povprečna dolžina sanj: <strong>{avgLength('dream')}</strong> znakov</p>
         <p>Povprečna dolžina dogodkov: <strong>{avgLength('events')}</strong> znakov</p>
       </div>

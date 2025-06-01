@@ -61,11 +61,14 @@ function Navbar({ user, onLogout, darkMode, setDarkMode }) {
                 <button
                   key={emoji}
                   onClick={() => handleEmojiClick(emoji)}
-                  className="text-2xl hover:scale-110 transition-transform"
+                  className={`text-2xl hover:scale-110 transition-transform 
+                  ${darkMode ? 'bg-gray-700' : 'bg-purple-50'}`}
                 >
                   {emoji}
                 </button>
               ))}
+
+              
             </div>
             <hr className="my-2 border-gray-300 dark:border-gray-600" />
             <button
@@ -76,6 +79,18 @@ function Navbar({ user, onLogout, darkMode, setDarkMode }) {
             >
               Vse sanje
             </button>
+
+            <button
+            onClick={() => {
+              setShowEmojiSearch(false);
+              navigate('/search/favourites');
+            }}
+            className={`w-full mt-2 px-4 py-2 rounded text-center transition ${
+              darkMode ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-400 hover:bg-purple-500 text-white'
+            }`}
+          >
+            Najljubše sanje
+          </button>
           </div>
         )}
 

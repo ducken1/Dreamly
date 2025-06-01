@@ -1,4 +1,4 @@
-function EntryCard({ entry, onEdit, onDelete, darkMode }) {
+function EntryCard({ entry, onEdit, onDelete, onToggleFavourite, darkMode }) {
   // Lepši prikaz datuma
   const formatDate = (timestamp) => {
     if (!timestamp) return '';
@@ -13,13 +13,21 @@ function EntryCard({ entry, onEdit, onDelete, darkMode }) {
     });
   };
 
+  const handleFavouriteClick = async () => {
+    try {
+      await onToggleFavourite(entry.id);
+    } catch (err) {
+      console.error('Napaka pri posodobitvi priljubljenih:', err);
+    }
+  };
+
   return (
     <div
       className={`relative mb-3 p-3 rounded shadow-sm border flex flex-col ${
         darkMode ? 'bg-gray-700 border-gray-600' : 'bg-purple-50 border-purple-300'
       }`}
     >
-      {/* Zgornja vrstica: Datum + Edit/Delete ikone */}
+      {/* Zgornja vrstica: Datum + Favourite/Edit/Delete ikone */}
       <div className="flex justify-between items-center mb-2">
         <p className="text-xs text-gray-400 dark:text-gray-500">
           {formatDate(entry.createdAt)}
@@ -29,6 +37,42 @@ function EntryCard({ entry, onEdit, onDelete, darkMode }) {
         <p>{entry.emoji}</p>
         
         <div className="flex gap-2 text-xl">
+          {/* Favourite toggle gumb */}
+          <button
+            onClick={handleFavouriteClick}
+            title={entry.favourite ? "Odstrani iz priljubljenih" : "Dodaj v priljubljene"}
+            className={`p-1 rounded transition-colors duration-200 ${
+              darkMode
+                ? 'hover:bg-gray-600 text-yellow-400 hover:text-yellow-300'
+                : 'hover:bg-purple-100 text-yellow-500 hover:text-yellow-600'
+            }`}
+            style={{ border: 'none' }}
+          >
+            {entry.favourite ? (
+              // Polna zvezda
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="20"
+                width="20"
+                fill="currentColor"
+                viewBox="0 -960 960 960"
+              >
+                <path d="m233-120 65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Z"/>
+              </svg>
+            ) : (
+              // Prazna zvezda
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="20"
+                width="20"
+                fill="currentColor"
+                viewBox="0 -960 960 960"
+              >
+                <path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z"/>
+              </svg>
+            )}
+          </button>
+
           <button
             onClick={() => onEdit(entry)}
             title="Uredi vnos"

@@ -56,7 +56,8 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
     fetchError,
     addEntry,
     updateEntry,
-    deleteEntry
+    deleteEntry,
+    toggleFavourite
   } = useDreamEntries(user);
 
   const handleSubmit = (entryData) => {
@@ -64,7 +65,7 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
     setError('');
     setSuccess('');
 
-    // 2) Takoj “odpovemo” editingEntry in remontaš formo
+    // 2) Takoj "odpovemo" editingEntry in remontaš formo
     //    (reakcija: key se spremeni => unmount + mount → DreamEntryForm je prazen)
     const wasEditing = Boolean(editingEntry);
     const entryId    = editingEntry?.id;
@@ -119,9 +120,21 @@ const handleDelete = useCallback((id) => {
     });
 }, [deleteEntry, editingEntry, setEditingEntry, setFormKey, setSuccess, setError]);
 
+  const handleToggleFavourite = useCallback(async (id) => {
+    try {
+      const newStatus = await toggleFavourite(id);
+      const message = newStatus ? 'Vnos dodan v priljubljene!' : 'Vnos odstranjen iz priljubljenih!';
+      setSuccess(message);
+      ShowNotification('Sanjski dnevnik', message);
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Napaka pri posodobitvi priljubljenih:', err);
+      setError(err.message || 'Prišlo je do napake pri posodobitvi priljubljenih.');
+    }
+  }, [toggleFavourite]);
 
   const handleEdit = (entry) => {
-    // Preklopimo v “urejanje” za ta vnos
+    // Preklopimo v "urejanje" za ta vnos
     setEditingEntry(entry);
     setError('');
     setSuccess('');
@@ -216,6 +229,7 @@ const handleDelete = useCallback((id) => {
           fetchError={fetchError}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onToggleFavourite={handleToggleFavourite}
           darkMode={darkMode}
         />
       </div>
@@ -224,10 +238,6 @@ const handleDelete = useCallback((id) => {
   <MoodChart entries={entries} darkMode={darkMode} />
   <TopMoodPerDayChart entries={entries} darkMode={darkMode} />
 </div>
-
-
-
-      
 
       <footer className="mt-8">
         <p className="text-sm text-center text-gray-500">
