@@ -8,6 +8,7 @@ import AlertMessage from '../components/AlertMessage';
 import { useDreamEntries } from '../hooks/useDreamEntries';
 import MoodChart from '../components/MoodChart';
 import TopMoodPerDayChart from '../components/TopMoodPerDayChart';
+import { ShowNotification } from '../components/ShowNotification';
 
 
 function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
@@ -61,6 +62,7 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
       updateEntry(entryId, entryData)
         .then(() => {
           setSuccess('Vnos uspešno posodobljen!');
+          ShowNotification('Sanjski dnevnik', 'Vnos uspešno posodobljen!');
           setTimeout(() => setSuccess(''), 3000);
         })
         .catch((err) => {
@@ -72,11 +74,13 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
       addEntry(entryData)
         .then(() => {
           setSuccess('Vnos uspešno shranjen!');
+          ShowNotification('Sanjski dnevnik', 'Vnos uspešno shranjen!');
           setTimeout(() => setSuccess(''), 3000);
         })
         .catch((err) => {
           console.error('Napaka pri shranjevanju:', err);
           setError(err.message || 'Prišlo je do napake pri shranjevanju.');
+          ShowNotification('Sanjski dnevnik', 'Prišlo je do napake pri shranjevanju.');
         });
     }
   };
@@ -91,6 +95,7 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
             setFormKey(prev => prev + 1);
           }
           setSuccess('Vnos je bil izbrisan.');
+          ShowNotification('Sanjski dnevnik', 'Vnos uspešno izbrisan!');
           setTimeout(() => setSuccess(''), 3000);
         }
       })

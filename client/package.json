@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@craco/craco": "^7.1.0",
+    "@craco/craco": "^5.9.0",
     "@react-oauth/google": "^0.12.2",
     "@tailwindcss/cli": "^4.1.8",
     "date-fns": "^4.1.0",
@@ -27,7 +27,7 @@
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.5.0",
-    "autoprefixer": "^9.8.8",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
