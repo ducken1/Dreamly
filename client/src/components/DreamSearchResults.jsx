@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import EntryCard from './EntryCard';
 
 function DreamSearchResults() {
@@ -14,40 +14,70 @@ function DreamSearchResults() {
   const auth = getAuth();
   const db = getFirestore();
 
-  useEffect(() => {
-    async function fetchDreams() {
-      setLoading(true);
-      setError(null);
+  // fetchDreams zdaj s useCallback, da jo lahko pokličemo tudi iz onDelete
+  const fetchDreams = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
+    const user = auth.currentUser;
+    if (!user) {
+      setError('Uporabnik ni prijavljen.');
+      setDreams([]);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const entriesRef = collection(db, 'users', user.uid, 'entries');
+      const q = emoji ? query(entriesRef, where('emoji', '==', emoji)) : query(entriesRef);
+      const querySnapshot = await getDocs(q);
+
+      const dreamsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setDreams(dreamsData);
+    } catch (err) {
+      console.error('Napaka pri nalaganju sanj:', err);
+      setError('Prišlo je do napake pri nalaganju sanj.');
+    }
+
+    setLoading(false);
+  }, [auth, db, emoji]);
+
+  useEffect(() => {
+    fetchDreams();
+  }, [fetchDreams]);
+
+  // Funkcija za brisanje vnosa direktno tukaj
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm('Ali res želite izbrisati ta vnos?');
+    if (!confirmed) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
       const user = auth.currentUser;
       if (!user) {
         setError('Uporabnik ni prijavljen.');
-        setDreams([]);
         setLoading(false);
         return;
       }
+      const docRef = doc(db, 'users', user.uid, 'entries', id);
+      await deleteDoc(docRef);
 
-      try {
-        const entriesRef = collection(db, 'users', user.uid, 'entries');
-        const q = emoji ? query(entriesRef, where('emoji', '==', emoji)) : query(entriesRef);
-        const querySnapshot = await getDocs(q);
+      // Osveži seznam sanj po brisanju
+      await fetchDreams();
 
-        const dreamsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        setDreams(dreamsData);
-      } catch (err) {
-        console.error('Napaka pri nalaganju sanj:', err);
-        setError('Prišlo je do napake pri nalaganju sanj.');
-      }
-
-      setLoading(false);
+    } catch (err) {
+      console.error('Napaka pri brisanju vnosa:', err);
+      setError('Prišlo je do napake pri brisanju vnosa.');
     }
 
-    fetchDreams();
-  }, [emoji, auth, db]);
+    setLoading(false);
+  };
 
   if (loading) {
     return (
@@ -101,8 +131,8 @@ function DreamSearchResults() {
               key={entry.id} 
               entry={entry} 
               darkMode={false} 
-              onEdit={() => {}} 
-              onDelete={() => {}} 
+              onEdit={() => navigate('/dashboard', { state: { editId: entry.id } })}
+              onDelete={() => handleDelete(entry.id)} 
             />
           ))}
         </div>

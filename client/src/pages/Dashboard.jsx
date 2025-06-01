@@ -9,11 +9,13 @@ import { useDreamEntries } from '../hooks/useDreamEntries';
 import MoodChart from '../components/MoodChart';
 import TopMoodPerDayChart from '../components/TopMoodPerDayChart';
 import { ShowNotification } from '../components/ShowNotification';
-
+import { useLocation } from 'react-router-dom';
+import { useCallback } from 'react';
 
 function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
   const [success, setSuccess] = useState('');
   const [error, setError]     = useState('');
+  const location = useLocation();
 
   // Če urejamo, vsebuje objekt; če ne, je null → prazen obrazec
   const [editingEntry, setEditingEntry] = useState(null);
@@ -98,25 +100,25 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
     }
   };
 
-  const handleDelete = (id) => {
-    deleteEntry(id)
-      .then((deleted) => {
-        if (deleted) {
-          // če brišemo tisti, ki ga urejamo, odpovemo urejanje in remontaš
-          if (editingEntry?.id === id) {
-            setEditingEntry(null);
-            setFormKey(prev => prev + 1);
-          }
-          setSuccess('Vnos je bil izbrisan.');
-          ShowNotification('Sanjski dnevnik', 'Vnos uspešno izbrisan!');
-          setTimeout(() => setSuccess(''), 3000);
+const handleDelete = useCallback((id) => {
+  deleteEntry(id)
+    .then((deleted) => {
+      if (deleted) {
+        if (editingEntry?.id === id) {
+          setEditingEntry(null);
+          setFormKey(prev => prev + 1);
         }
-      })
-      .catch((err) => {
-        console.error('Napaka pri brisanju:', err);
-        setError(err.message || 'Prišlo je do napake pri brisanju vnosa.');
-      });
-  };
+        setSuccess('Vnos je bil izbrisan.');
+        ShowNotification('Sanjski dnevnik', 'Vnos uspešno izbrisan!');
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    })
+    .catch((err) => {
+      console.error('Napaka pri brisanju:', err);
+      setError(err.message || 'Prišlo je do napake pri brisanju vnosa.');
+    });
+}, [deleteEntry, editingEntry, setEditingEntry, setFormKey, setSuccess, setError]);
+
 
   const handleEdit = (entry) => {
     // Preklopimo v “urejanje” za ta vnos
@@ -133,6 +135,25 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
     setError('');
     setSuccess('');
   };
+
+  useEffect(() => {
+    if (location.state) {
+      if (location.state.editId) {
+        // Poišči vnos z ID-jem editId in nastavi urejanje
+        const entryToEdit = entries.find(e => e.id === location.state.editId);
+        if (entryToEdit) {
+          handleEdit(entryToEdit);
+        }
+      }
+      if (location.state.deleteId) {
+        handleDelete(location.state.deleteId);
+      }
+
+      // Po obdelavi lahko počistiš location.state, da se ne ponavlja
+      // (npr. s history.replace ali uporabo lokalnega state-a)
+      window.history.replaceState({}, document.title); // Preprosto odstrani state iz URL-a
+    }
+  }, [location.state, entries, handleDelete]);  // Dodaj entries, da se najde entry ob spremembi
 
   return (
     <div
