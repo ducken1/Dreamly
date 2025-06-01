@@ -25,6 +25,19 @@ function Dashboard({ user, onLogout, darkMode, setDarkMode }) {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
+  const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+  // Nastavi darkMode ob prvem renderju glede na sistemsko nastavitev
+  setDarkMode(darkModeMediaQuery.matches);
+
+  // Poslušaj spremembe sistemske teme
+  const handleChange = (e) => setDarkMode(e.matches);
+  darkModeMediaQuery.addEventListener('change', handleChange);
+
+  return () => darkModeMediaQuery.removeEventListener('change', handleChange);
+}, [setDarkMode]);
+
+  useEffect(() => {
     const goOffline = () => setIsOffline(true);
     const goOnline  = () => setIsOffline(false);
     window.addEventListener('offline', goOffline);
