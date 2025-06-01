@@ -54,6 +54,8 @@ function App() {
             } 
           />
           <Route path="/search/:emoji" element={<DreamSearchResults />} />
+          {/* Pot za prikaz vseh sanj brez filtra */}
+          <Route path="/search" element={<DreamSearchResults />} />
         </Routes>
       </Router>
     </GoogleOAuthProvider>

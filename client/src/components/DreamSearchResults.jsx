@@ -112,7 +112,7 @@ function DreamSearchResults() {
     <div className="min-h-screen px-6 py-8 bg-purple-50 dark:bg-gray-900 transition-colors duration-300">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-3xl font-bold text-purple-800 dark:text-white mb-6">
-          Sanje {emoji ? `z emotikonom: ` : 'uporabnika:'}{' '}
+          Sanje{emoji ? ` z emotikonom: ` : ':'}{' '}
           {emoji && <span className="text-4xl">{emoji}</span>}
         </h2>
 

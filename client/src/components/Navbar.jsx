@@ -12,6 +12,11 @@ function Navbar({ user, onLogout, darkMode, setDarkMode }) {
     navigate(`/search/${emoji}`);
   };
 
+  const handleAllDreamsClick = () => {
+    setShowEmojiSearch(false);
+    navigate('/search'); // Brez emoji, da se prikažejo vse sanje
+  };
+
   return (
     <nav
       className={`px-6 py-2 flex justify-between items-center shadow-md
@@ -31,7 +36,6 @@ function Navbar({ user, onLogout, darkMode, setDarkMode }) {
           }`}
           aria-label="Search dreams by emoji"
         >
-          {/* SVG ikona namesto slike */}
           <svg xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -63,6 +67,15 @@ function Navbar({ user, onLogout, darkMode, setDarkMode }) {
                 </button>
               ))}
             </div>
+            <hr className="my-2 border-gray-300 dark:border-gray-600" />
+            <button
+              onClick={handleAllDreamsClick}
+              className={`w-full mt-2 px-4 py-2 rounded text-center transition ${
+                darkMode ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-400 hover:bg-purple-500 text-white'
+              }`}
+            >
+              Vse sanje
+            </button>
           </div>
         )}
 
