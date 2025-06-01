@@ -17,12 +17,14 @@ function MoodChart({ entries, darkMode }) {
 
   return (
     <div className="max-w-md w-full">
-      <h3
-        className={darkMode ? 'text-xl text-gray-300' : 'text-xl text-purple-900'}
-        style={{ minHeight: 38 }} // poravnava višine naslovov
-      >
-        Pogostost občutkov ob prebujanju
-      </h3>
+        <div className="flex flex-col items-center mb-2">
+          <h3
+            className={darkMode ? 'text-xl text-gray-300' : 'text-xl text-purple-900'}
+            style={{ minHeight: 38 }}
+          >
+            Pogostost občutkov ob prebujanju
+          </h3>
+        </div>
       <ResponsiveContainer width="100%" height={280}>
         <PieChart>
           <Pie
