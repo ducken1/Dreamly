@@ -38,40 +38,37 @@ function EntryCard({ entry, onEdit, onDelete, onToggleFavourite, darkMode }) {
         
         <div className="flex gap-2 text-xl">
           {/* Favourite toggle gumb */}
-          <button
-            onClick={handleFavouriteClick}
-            title={entry.favourite ? "Odstrani iz priljubljenih" : "Dodaj v priljubljene"}
-            className={`p-1 rounded transition-colors duration-200 ${
-              darkMode
-                ? 'hover:bg-gray-600 text-yellow-400 hover:text-yellow-300'
-                : 'hover:bg-purple-100 text-yellow-500 hover:text-yellow-600'
-            }`}
-            style={{ border: 'none' }}
-          >
-            {entry.favourite ? (
-              // Polna zvezda
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="20"
-                width="20"
-                fill="currentColor"
-                viewBox="0 -960 960 960"
-              >
-                <path d="m233-120 65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Z"/>
-              </svg>
-            ) : (
-              // Prazna zvezda
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="20"
-                width="20"
-                fill="currentColor"
-                viewBox="0 -960 960 960"
-              >
-                <path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z"/>
-              </svg>
-            )}
-          </button>
+        <button
+          onClick={handleFavouriteClick}
+          title={entry.favourite ? "Odstrani iz priljubljenih" : "Dodaj v priljubljene"}
+          className={`transition-colors duration-200 text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300`}
+          style={{ background: 'none', border: 'none', padding: 0, display: 'flex', alignItems: 'center' }}
+        >
+          {entry.favourite ? (
+            // Full star
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="20"
+              width="20"
+              fill="currentColor"
+              viewBox="0 -960 960 960"
+            >
+              <path d="m233-120 65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Z" />
+            </svg>
+          ) : (
+            // Empty star
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="20"
+              width="20"
+              fill="currentColor"
+              viewBox="0 -960 960 960"
+            >
+              <path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z" />
+            </svg>
+          )}
+        </button>
+
 
           <button
             onClick={() => onEdit(entry)}
